@@ -24,18 +24,28 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
         incoming_key = request.headers.get("X-API-Key", "").strip()
         configured_key = settings.api_key.strip()
 
+        if not configured_key:
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={
+                    "error": "Server Configuration Error",
+                    "detail": "API_KEY is not set in the server environment (e.g. Vercel Environment Variables).",
+                    "hint": "Go to Vercel Dashboard > Settings > Environment Variables and add API_KEY."
+                }
+            )
+
         if incoming_key != configured_key:
             from app.utils.logger import logger
             logger.warning(
                 f"API Key mismatch for path: {request.url.path}. "
-                f"Received: {incoming_key[:3]}...{incoming_key[-3:] if len(incoming_key) > 6 else ''}, "
-                f"Expected: {configured_key[:3]}...{configured_key[-3:] if len(configured_key) > 6 else ''}"
+                f"Received: {incoming_key[:3]}...{incoming_key[-3:] if len(incoming_key) > 3 else ''}, "
+                f"Expected: {configured_key[:3]}...{configured_key[-3:] if len(configured_key) > 3 else ''}"
             )
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 content={
                     "error": "Invalid or missing API key.",
-                    "hint": "Pass your API key in the X-API-Key header. Ensure no leading/trailing spaces.",
+                    "hint": "Pass your API key in the X-API-Key header. Ensure it matches the API_KEY set in Vercel settings.",
                 },
             )
         return await call_next(request)
