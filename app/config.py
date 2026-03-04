@@ -13,13 +13,16 @@ class Settings(BaseSettings):
     # Internal API security
     api_key: str = Field(..., env="API_KEY")
 
+    # OpenAI / OpenRouter key for Embeddings (defaults to openrouter_api_key if empty)
+    openai_api_key: str = Field(default="", env="OPENAI_API_KEY")
+
     # Vector store
     chroma_path: str = Field(default="./chroma_db", env="CHROMA_PATH")
 
     # LLM settings
     llm_model: str = Field(default="openai/gpt-4o-mini", env="LLM_MODEL")
-    # HuggingFace sentence-transformers model for local embeddings (no API key needed)
-    embedding_model: str = Field(default="all-MiniLM-L6-v2", env="EMBEDDING_MODEL")
+    # Cloud-based embeddings (text-embedding-3-small is cheap and fast)
+    embedding_model: str = Field(default="text-embedding-3-small", env="EMBEDDING_MODEL")
     chunk_size: int = Field(default=1000, env="CHUNK_SIZE")
     chunk_overlap: int = Field(default=200, env="CHUNK_OVERLAP")
 

@@ -14,9 +14,6 @@ chromadb==0.5.3
 # Document parsing
 pymupdf==1.24.5
 
-# Local embeddings (no API key required — uses HuggingFace sentence-transformers)
-sentence-transformers==3.0.1
-
 # Config & validation
 pydantic==2.7.4
 pydantic-settings==2.3.4

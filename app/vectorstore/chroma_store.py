@@ -1,7 +1,7 @@
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 from langchain_chroma import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain.schema import Document
 
 from app.config import get_settings
@@ -11,8 +11,8 @@ settings = get_settings()
 # Shared Chroma persistent client (singleton)
 _chroma_client: chromadb.ClientAPI | None = None
 
-# Shared embedding model (loaded once into memory — ~80 MB)
-_embeddings: HuggingFaceEmbeddings | None = None
+# Shared embedding model (singleton)
+_embeddings: OpenAIEmbeddings | None = None
 
 
 def _get_client() -> chromadb.ClientAPI:
@@ -25,18 +25,17 @@ def _get_client() -> chromadb.ClientAPI:
     return _chroma_client
 
 
-def _get_embeddings() -> HuggingFaceEmbeddings:
+def _get_embeddings() -> OpenAIEmbeddings:
     """
-    Load the sentence-transformers model once and cache it.
-    Uses all-MiniLM-L6-v2 by default — small (80 MB), fast, and free.
-    No API key required.
+    Load the OpenAI embedding model.
+    Uses text-embedding-3-small by default — fast and cost-effective.
     """
     global _embeddings
     if _embeddings is None:
-        _embeddings = HuggingFaceEmbeddings(
-            model_name=settings.embedding_model,
-            model_kwargs={"device": "cpu"},
-            encode_kwargs={"normalize_embeddings": True},
+        _embeddings = OpenAIEmbeddings(
+            model=settings.embedding_model,
+            openai_api_key=settings.openai_api_key if settings.openai_api_key else settings.openrouter_api_key,
+            openai_api_base=settings.openrouter_base_url if not settings.openai_api_key else None,
         )
     return _embeddings
 
