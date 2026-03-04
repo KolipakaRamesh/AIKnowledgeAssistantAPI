@@ -35,9 +35,20 @@ def get_vectorstore() -> PineconeVectorStore:
 
 def add_documents(documents: list[Document]) -> int:
     """Embed and store documents in Pinecone."""
-    store = get_vectorstore()
-    store.add_documents(documents)
-    return len(documents)
+    log = logger.bind(chunk_count=len(documents))
+    try:
+        log.info("Initializing Pinecone vector store")
+        store = get_vectorstore()
+        
+        log.info(f"Upserting {len(documents)} documents to Pinecone index: {settings.pinecone_index_name}")
+        store.add_documents(documents)
+        
+        log.info("Successfully completed Pinecone upsert")
+        return len(documents)
+    except Exception as e:
+        log.error(f"Failed to store documents in Pinecone: {str(e)}")
+        # Re-raise to let the service layer handle it or return error to user
+        raise e
 
 def similarity_search(
     query: str, document_id: str | None = None, k: int = 5

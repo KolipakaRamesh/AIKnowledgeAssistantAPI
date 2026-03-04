@@ -52,8 +52,13 @@ async def ingest_document(filename: str, file_bytes: bytes) -> dict:
     log.info(f"Created {len(chunks)} chunks")
 
     # 3. Embed + store
-    log.info("Embedding and storing chunks in Chroma")
-    count = add_documents(documents=chunks)
+    log.info("Embedding and storing chunks in Pinecone")
+    try:
+        count = add_documents(documents=chunks)
+    except Exception as e:
+        log.error(f"Storage failed: {str(e)}")
+        # You could decide to return a 500 here if it's a critical failure
+        raise ValueError(f"Failed to store documents in Pinecone: {str(e)}")
 
     log.info(f"Successfully stored {count} chunks")
 
