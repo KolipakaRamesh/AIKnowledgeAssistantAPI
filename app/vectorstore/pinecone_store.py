@@ -14,11 +14,17 @@ _embeddings: OpenAIEmbeddings | None = None
 def _get_embeddings() -> OpenAIEmbeddings:
     global _embeddings
     if _embeddings is None:
-        _embeddings = OpenAIEmbeddings(
-            model=settings.embedding_model,
-            openai_api_key=settings.openai_api_key if settings.openai_api_key else settings.openrouter_api_key,
-            openai_api_base=settings.openrouter_base_url if not settings.openai_api_key else None,
-        )
+        logger.info(f"Creating OpenAIEmbeddings instance (model: {settings.embedding_model})")
+        try:
+            _embeddings = OpenAIEmbeddings(
+                model=settings.embedding_model,
+                openai_api_key=settings.openai_api_key if settings.openai_api_key else settings.openrouter_api_key,
+                openai_api_base=settings.openrouter_base_url if not settings.openai_api_key else None,
+            )
+            logger.info("OpenAIEmbeddings instance created successfully")
+        except Exception as e:
+            logger.error(f"Failed to create OpenAIEmbeddings: {str(e)}")
+            raise e
     return _embeddings
 
 def get_vectorstore() -> PineconeVectorStore:

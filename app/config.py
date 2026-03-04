@@ -3,6 +3,10 @@ from pydantic_settings import BaseSettings
 from pydantic import Field
 from functools import lru_cache
 
+# Set tiktoken cache to /tmp for Vercel (read-only filesystem fix)
+if os.getenv("VERCEL") == "1":
+    os.environ["TIKTOKEN_CACHE_DIR"] = "/tmp"
+
 
 class Settings(BaseSettings):
     # OpenRouter (OpenAI-compatible)
