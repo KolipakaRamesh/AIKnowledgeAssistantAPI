@@ -3,9 +3,10 @@ from pydantic_settings import BaseSettings
 from pydantic import Field
 from functools import lru_cache
 
-# Set tiktoken cache to /tmp for Vercel (read-only filesystem fix)
+# Set tiktoken cache to a temporary directory for environments with limited filesystems
 if os.getenv("VERCEL") == "1":
-    os.environ["TIKTOKEN_CACHE_DIR"] = "/tmp"
+    import tempfile
+    os.environ["TIKTOKEN_CACHE_DIR"] = tempfile.gettempdir()
 
 
 class Settings(BaseSettings):

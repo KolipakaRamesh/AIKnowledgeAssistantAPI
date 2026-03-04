@@ -1,6 +1,9 @@
 # 🧠 AI Knowledge Assistant API
 
-A production-ready **Retrieval Augmented Generation (RAG)** API designed for high-performance document intelligence. Build, query, and extract insights from your documents with full source attribution.
+A production-ready **Retrieval Augmented Generation (RAG)** API designed for high-performance document intelligence. Build, query, and extract insights from your documents with full source attribution. 
+
+> [!NOTE]
+> Designed with production stability in mind, addressing common pitfalls highlighted in *"Most RAG Systems Fail in Production"* (e.g., robust chunking, metadata filtering, and cross-platform reliability).
 
 ---
 
@@ -76,6 +79,11 @@ cp .env.example .env
 uvicorn app.main:app --reload --port 8000
 ```
 Visit **http://localhost:8000/docs** to explore the interactive API documentation.
+
+### 🛡️ Production Readiness & Stability
+- **Cross-Platform Compatibility**: Automatically handles environment-specific challenges (e.g., dynamically adjusting `TIKTOKEN_CACHE_DIR` for Vercel vs. Windows/Linux).
+- **Pinecone Integration**: Uses Pinecone's serverless/pod-based architecture for scalable vector storage and fast retrieval.
+- **Enterprise Settings**: Configurable `CHUNK_SIZE`, `CHUNK_OVERLAP`, and rate limits to prevent API abuse and optimize retrieval performance.
 
 ---
 
