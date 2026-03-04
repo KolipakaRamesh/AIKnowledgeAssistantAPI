@@ -18,7 +18,7 @@ graph TD
     subgraph "Ingestion Pipeline"
         Router --> Parser["PyMuPDF Parser"]
         Parser --> Chunker["Recursive Chunker"]
-        Chunker --> Embedder["OpenAI / HF Embeddings"]
+        Chunker --> Embedder["OpenAI Cloud Embeddings"]
         Embedder --> Chroma["Chroma Vector DB"]
     end
     
@@ -68,7 +68,7 @@ pip install -r requirements.txt
 
 # Configure environment
 cp .env.example .env
-# Edit .env and set your OPENROUTER_API_KEY and API_KEY
+# Edit .env and set your OPENROUTER_API_KEY, OPENAI_API_KEY (optional), and API_KEY
 ```
 
 ### 3. Run Locally
@@ -109,7 +109,7 @@ curl -X POST http://localhost:8000/ask-question \
 - **API Framework**: [FastAPI](https://fastapi.tiangolo.com/)
 - **Orchestration**: [LangChain](https://www.langchain.com/)
 - **Vector Database**: [ChromaDB](https://www.trychroma.com/)
-- **Embeddings**: HuggingFace (Local) or OpenAI
+- **Embeddings**: [OpenAI Embeddings](https://platform.openai.com/docs/guides/embeddings) (`text-embedding-3-small`)
 - **LLM Provider**: [OpenRouter](https://openrouter.ai/)
 - **Deployment**: [Vercel](https://vercel.com/)
 - **Observability**: [LangSmith](https://smith.langchain.com/)
