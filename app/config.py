@@ -17,11 +17,9 @@ class Settings(BaseSettings):
     # OpenAI / OpenRouter key for Embeddings (defaults to openrouter_api_key if empty)
     openai_api_key: str = Field(default="", env="OPENAI_API_KEY")
 
-    # Vector store (use /tmp on Vercel for writable filesystem)
-    chroma_path: str = Field(
-        default="/tmp/chroma_db" if os.getenv("VERCEL") == "1" else "./chroma_db",
-        env="CHROMA_PATH"
-    )
+    # Pinecone Vector Store
+    pinecone_api_key: str = Field(default="", env="PINECONE_API_KEY")
+    pinecone_index_name: str = Field(default="", env="PINECONE_INDEX_NAME")
 
     # LLM settings
     llm_model: str = Field(default="openai/gpt-4o-mini", env="LLM_MODEL")
@@ -52,6 +50,8 @@ class Settings(BaseSettings):
         missing = []
         if not self.openrouter_api_key: missing.append("OPENROUTER_API_KEY")
         if not self.api_key: missing.append("API_KEY")
+        if not self.pinecone_api_key: missing.append("PINECONE_API_KEY")
+        if not self.pinecone_index_name: missing.append("PINECONE_INDEX_NAME")
         return missing
 
     model_config = {"env_file": ".env", "extra": "ignore"}

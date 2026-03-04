@@ -19,7 +19,7 @@ graph TD
         Router --> Parser["PyMuPDF Parser"]
         Parser --> Chunker["Recursive Chunker"]
         Chunker --> Embedder["OpenAI Cloud Embeddings"]
-        Embedder --> Chroma["Chroma Vector DB"]
+        Embedder --> Pinecone["Pinecone Cloud Vector DB"]
     end
     
     subgraph "Retrieval & RAG"
@@ -28,7 +28,7 @@ graph TD
         LLM --> Formatter["Response Formatter"]
     end
     
-    Chroma -.-> Retriever
+    Pinecone -.-> Retriever
 ```
 
 ---
@@ -108,7 +108,7 @@ curl -X POST http://localhost:8000/ask-question \
 
 - **API Framework**: [FastAPI](https://fastapi.tiangolo.com/)
 - **Orchestration**: [LangChain](https://www.langchain.com/)
-- **Vector Database**: [ChromaDB](https://www.trychroma.com/)
+- **Vector Database**: [Pinecone](https://www.pinecone.io/)
 - **Embeddings**: [OpenAI Embeddings](https://platform.openai.com/docs/guides/embeddings) (`text-embedding-3-small`)
 - **LLM Provider**: [OpenRouter](https://openrouter.ai/)
 - **Deployment**: [Vercel](https://vercel.com/)

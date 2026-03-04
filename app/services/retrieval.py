@@ -5,7 +5,7 @@ from langchain.prompts import PromptTemplate
 from langchain.schema import Document
 
 from app.config import get_settings
-from app.vectorstore.chroma_store import similarity_search, list_all_collections
+from app.vectorstore.pinecone_store import similarity_search
 from loguru import logger
 
 settings = get_settings()
@@ -104,42 +104,33 @@ def _format_sources(chunks: list[tuple[Document, float]]) -> list[dict]:
 
 async def answer_question(question: str, document_id: str | None = None) -> dict:
     """
-    RAG pipeline: embed query → vector search → LLM answer via OpenRouter.
+    RAG pipeline: embed query → vector search in Pinecone → LLM answer via OpenRouter.
     Returns answer, source flag ('vectordb'|'llm'), confidence, and source chunks.
     """
     log = logger.bind(question=question[:80], document_id=document_id)
     log.info("Processing ask-question request")
 
-    collection_names = [document_id] if document_id else list_all_collections()
-
-    if not collection_names:
-        log.warning("No documents found — falling back to pure LLM")
+    try:
+        # If document_id is provided, we filter by it. 
+        # If None, Pinecone searches the whole index.
+        top_chunks = similarity_search(question, document_id=document_id, k=5)
+    except Exception as e:
+        log.warning(f"Vector search failed: {e}")
         return await _llm_only_answer(question)
 
-    all_chunks: list[tuple[Document, float]] = []
-    for col in collection_names:
-        try:
-            chunks = similarity_search(col, question, k=5)
-            all_chunks.extend(chunks)
-        except Exception as e:
-            log.warning(f"Search failed for collection {col}: {e}")
-
-    if not all_chunks:
+    if not top_chunks:
         log.warning("No relevant chunks found — falling back to pure LLM")
         return await _llm_only_answer(question)
 
-    # Sort by score descending; keep top 5
-    all_chunks.sort(key=lambda x: x[1], reverse=True)
-    top_chunks = all_chunks[:5]
     avg_score = sum(s for _, s in top_chunks) / len(top_chunks)
-
     context = _build_context_from_chunks(top_chunks)
+    
     llm = _get_llm()
     prompt_text = QA_PROMPT.format(context=context, question=question)
     response = llm.invoke(prompt_text)
     answer = response.content.strip()
 
-    log.info(f"Answer generated from vectordb; avg_score={avg_score:.3f}")
+    log.info(f"Answer generated from Pinecone; avg_score={avg_score:.3f}")
 
     return {
         "answer": answer,
@@ -166,7 +157,11 @@ async def summarize_document(document_id: str) -> dict:
     log = logger.bind(document_id=document_id)
     log.info("Generating document summary")
 
-    chunks = similarity_search(document_id, "document summary overview introduction", k=20)
+    chunks = similarity_search(
+        "document summary overview introduction", 
+        document_id=document_id, 
+        k=20
+    )
     if not chunks:
         raise ValueError(f"No content found for document_id: {document_id}")
 
@@ -194,7 +189,9 @@ async def extract_keypoints(document_id: str) -> dict:
     log.info("Extracting key points")
 
     chunks = similarity_search(
-        document_id, "key insights action items important terms results", k=20
+        "key insights action items important terms results", 
+        document_id=document_id, 
+        k=20
     )
     if not chunks:
         raise ValueError(f"No content found for document_id: {document_id}")

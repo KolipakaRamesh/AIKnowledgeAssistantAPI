@@ -4,7 +4,7 @@ from loguru import logger
 from app.config import get_settings
 from app.utils.file_parser import extract_text
 from app.utils.chunker import chunk_text
-from app.vectorstore.chroma_store import add_documents
+from app.vectorstore.pinecone_store import add_documents
 
 settings = get_settings()
 
@@ -53,7 +53,7 @@ async def ingest_document(filename: str, file_bytes: bytes) -> dict:
 
     # 3. Embed + store
     log.info("Embedding and storing chunks in Chroma")
-    count = add_documents(collection_name=document_id, documents=chunks)
+    count = add_documents(documents=chunks)
 
     log.info(f"Successfully stored {count} chunks")
 
