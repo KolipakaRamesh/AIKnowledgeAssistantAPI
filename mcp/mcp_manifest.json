@@ -1,0 +1,189 @@
+{
+    "schema_version": "v1",
+    "name": "ai-knowledge-assistant",
+    "description": "Upload documents and ask questions, get summaries and key insights using Retrieval Augmented Generation (RAG). Responses are grounded in uploaded content with source attribution.",
+    "base_url": "https://YOUR-VERCEL-URL.vercel.app",
+    "auth": {
+        "type": "header",
+        "header_name": "X-API-Key"
+    },
+    "tools": [
+        {
+            "name": "upload_document",
+            "description": "Upload a PDF, TXT, or Markdown document and index it into the vector database for RAG. Returns a document_id to use with other tools.",
+            "method": "POST",
+            "path": "/upload-doc",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary",
+                        "description": "File content (PDF, TXT, or MD). Send as multipart/form-data."
+                    }
+                },
+                "required": [
+                    "file"
+                ]
+            },
+            "output_schema": {
+                "type": "object",
+                "properties": {
+                    "document_id": {
+                        "type": "string"
+                    },
+                    "filename": {
+                        "type": "string"
+                    },
+                    "chunks_indexed": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        {
+            "name": "ask_question",
+            "description": "Ask a question grounded in uploaded documents via RAG. Returns answer, source ('vectordb' or 'llm'), confidence score, and source chunks.",
+            "method": "POST",
+            "path": "/ask-question",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "question": {
+                        "type": "string",
+                        "description": "The question to ask.",
+                        "minLength": 3,
+                        "maxLength": 2000
+                    },
+                    "document_id": {
+                        "type": "string",
+                        "description": "Optional. Restrict search to a specific document."
+                    }
+                },
+                "required": [
+                    "question"
+                ]
+            },
+            "output_schema": {
+                "type": "object",
+                "properties": {
+                    "answer": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string",
+                        "enum": [
+                            "vectordb",
+                            "llm"
+                        ]
+                    },
+                    "confidence": {
+                        "type": "number"
+                    },
+                    "sources": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "chunk_id": {
+                                    "type": "string"
+                                },
+                                "text": {
+                                    "type": "string"
+                                },
+                                "score": {
+                                    "type": "number"
+                                },
+                                "filename": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "summarize_document",
+            "description": "Generate a structured summary of an uploaded document including bullet points and key concepts.",
+            "method": "POST",
+            "path": "/summarize",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "document_id": {
+                        "type": "string",
+                        "description": "Document ID returned by upload_document."
+                    }
+                },
+                "required": [
+                    "document_id"
+                ]
+            },
+            "output_schema": {
+                "type": "object",
+                "properties": {
+                    "summary": {
+                        "type": "string"
+                    },
+                    "bullet_points": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "important_concepts": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "extract_keypoints",
+            "description": "Extract major insights, important terms, and action items from an uploaded document.",
+            "method": "POST",
+            "path": "/extract-keypoints",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "document_id": {
+                        "type": "string",
+                        "description": "Document ID returned by upload_document."
+                    }
+                },
+                "required": [
+                    "document_id"
+                ]
+            },
+            "output_schema": {
+                "type": "object",
+                "properties": {
+                    "major_insights": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "important_terms": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "action_items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
