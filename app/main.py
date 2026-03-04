@@ -24,8 +24,9 @@ limiter = Limiter(key_func=get_remote_address, default_limits=[settings.rate_lim
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("AI Knowledge Assistant API starting up")
-    # Ensure Chroma persistence directory exists
-    os.makedirs(settings.chroma_path, exist_ok=True)
+    # Ensure Chroma persistence directory exists (writable in /tmp on Vercel)
+    if settings.chroma_path:
+        os.makedirs(settings.chroma_path, exist_ok=True)
     yield
     logger.info("AI Knowledge Assistant API shutting down")
 

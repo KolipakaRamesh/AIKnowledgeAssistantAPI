@@ -1,3 +1,4 @@
+import os
 from pydantic_settings import BaseSettings
 from pydantic import Field
 from functools import lru_cache
@@ -16,8 +17,11 @@ class Settings(BaseSettings):
     # OpenAI / OpenRouter key for Embeddings (defaults to openrouter_api_key if empty)
     openai_api_key: str = Field(default="", env="OPENAI_API_KEY")
 
-    # Vector store
-    chroma_path: str = Field(default="./chroma_db", env="CHROMA_PATH")
+    # Vector store (use /tmp on Vercel for writable filesystem)
+    chroma_path: str = Field(
+        default="/tmp/chroma_db" if os.getenv("VERCEL") == "1" else "./chroma_db",
+        env="CHROMA_PATH"
+    )
 
     # LLM settings
     llm_model: str = Field(default="openai/gpt-4o-mini", env="LLM_MODEL")
