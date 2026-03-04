@@ -6,13 +6,13 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     # OpenRouter (OpenAI-compatible)
-    openrouter_api_key: str = Field(..., env="OPENROUTER_API_KEY")
+    openrouter_api_key: str = Field(default="", env="OPENROUTER_API_KEY")
     openrouter_base_url: str = Field(
         default="https://openrouter.ai/api/v1", env="OPENROUTER_BASE_URL"
     )
 
     # Internal API security
-    api_key: str = Field(..., env="API_KEY")
+    api_key: str = Field(default="", env="API_KEY")
 
     # OpenAI / OpenRouter key for Embeddings (defaults to openrouter_api_key if empty)
     openai_api_key: str = Field(default="", env="OPENAI_API_KEY")
@@ -46,6 +46,13 @@ class Settings(BaseSettings):
     langsmith_project: str = Field(
         default="AIKnowledgeAssistantAPI", env="LANGSMITH_PROJECT"
     )
+
+    def validate_keys(self):
+        """Check for missing keys without crashing on startup."""
+        missing = []
+        if not self.openrouter_api_key: missing.append("OPENROUTER_API_KEY")
+        if not self.api_key: missing.append("API_KEY")
+        return missing
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

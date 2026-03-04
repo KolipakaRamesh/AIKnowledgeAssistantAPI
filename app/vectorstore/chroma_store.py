@@ -18,10 +18,14 @@ _embeddings: OpenAIEmbeddings | None = None
 def _get_client() -> chromadb.ClientAPI:
     global _chroma_client
     if _chroma_client is None:
-        _chroma_client = chromadb.PersistentClient(
-            path=settings.chroma_path,
-            settings=ChromaSettings(anonymized_telemetry=False),
-        )
+        try:
+            _chroma_client = chromadb.PersistentClient(
+                path=settings.chroma_path,
+                settings=ChromaSettings(anonymized_telemetry=False),
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize ChromaDB client: {e}")
+            raise RuntimeError(f"ChromaDB initialization failed. This often happens on serverless if binaries are missing. Error: {e}")
     return _chroma_client
 
 

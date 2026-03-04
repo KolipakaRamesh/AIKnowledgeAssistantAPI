@@ -112,4 +112,16 @@ def create_app() -> FastAPI:
     return app
 
 
-app = create_app()
+try:
+    app = create_app()
+except Exception as e:
+    logger.critical(f"Failed to initialize FastAPI application: {e}")
+    # Create a dummy app to respond with error for diagnostics
+    app = FastAPI()
+    @app.get("/{path:path}")
+    async def caught_error(path: str):
+        return {
+            "error": "Initialization Failed", 
+            "detail": str(e),
+            "hint": "Check Vercel Environment Variables and Logs."
+        }
