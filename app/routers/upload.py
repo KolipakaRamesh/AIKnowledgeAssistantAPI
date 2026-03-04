@@ -47,7 +47,7 @@ async def upload_document(request: Request, file: UploadFile = File(...)):
         logger.exception(f"Ingestion failed for {filename}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Document ingestion failed. Check server logs for details.",
+            detail=f"Document ingestion failed: {str(e)}",
         )
 
     return result
