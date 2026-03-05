@@ -37,8 +37,7 @@ def get_vectorstore() -> PineconeVectorStore:
     return PineconeVectorStore(
         index_name=settings.pinecone_index_name,
         embedding=_get_embeddings(),
-        pinecone_api_key=settings.pinecone_api_key,
-        pool_threads=1  # Minimize resource usage in serverless
+        pinecone_api_key=settings.pinecone_api_key
     )
 
 def add_documents(documents: list[Document]) -> int:
