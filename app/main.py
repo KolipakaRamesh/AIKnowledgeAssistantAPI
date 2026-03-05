@@ -9,6 +9,28 @@ from concurrent.futures import ThreadPoolExecutor
 # use multiprocessing.pool.ThreadPool, which triggers this. We replace it 
 # with a ThreadPoolExecutor-based implementation that avoids semaphores.
 
+class VercelResult:
+    def __init__(self, future_or_futures, is_list=False):
+        self._data = future_or_futures
+        self._is_list = is_list
+
+    def get(self, timeout=None):
+        if self._is_list:
+            return [f.result(timeout=timeout) for f in self._data]
+        return self._data.result(timeout=timeout)
+
+    def ready(self):
+        if self._is_list:
+            return all(f.done() for f in self._data)
+        return self._data.done()
+
+    def successful(self):
+        if not self.ready():
+            raise ValueError("Result not ready")
+        if self._is_list:
+            return all(f.exception() is None for f in self._data)
+        return self._data.exception() is None
+
 class VercelThreadPool:
     def __init__(self, processes=None, initializer=None, initargs=()):
         self._executor = ThreadPoolExecutor(max_workers=processes)
@@ -19,12 +41,18 @@ class VercelThreadPool:
             future.add_done_callback(lambda f: callback(f.result()) if not f.exception() else None)
         if error_callback:
             future.add_done_callback(lambda f: error_callback(f.exception()) if f.exception() else None)
-        return future
+        return VercelResult(future)
 
     def map_async(self, func, iterable, chunksize=None, callback=None, error_callback=None):
-        # Simple implementation for map_async
         futures = [self._executor.submit(func, item) for item in iterable]
-        return futures
+        if callback:
+            # Simple combined callback for map_async
+            def _done(fs):
+                if all(f.done() for f in fs) and all(f.exception() is None for f in fs):
+                    callback([f.result() for f in fs])
+            for f in futures:
+                f.add_done_callback(lambda _: _done(futures))
+        return VercelResult(futures, is_list=True)
 
     def close(self):
         self._executor.shutdown(wait=False)
