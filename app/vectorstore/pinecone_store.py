@@ -37,7 +37,8 @@ def get_vectorstore() -> PineconeVectorStore:
     return PineconeVectorStore(
         index_name=settings.pinecone_index_name,
         embedding=_get_embeddings(),
-        pinecone_api_key=settings.pinecone_api_key
+        pinecone_api_key=settings.pinecone_api_key,
+        pool_threads=1  # Minimize resource usage in serverless
     )
 
 def add_documents(documents: list[Document]) -> int:
@@ -53,11 +54,9 @@ def add_documents(documents: list[Document]) -> int:
         log.info("Successfully completed Pinecone upsert")
         return len(documents)
     except Exception as e:
-        import traceback
-        tb_str = traceback.format_exc()
-        log.error(f"Failed to store documents in Pinecone: {str(e)}\n{tb_str}")
-        # Include traceback in the exception message for user-facing diagnostics
-        raise ValueError(f"Failed to store documents in Pinecone: {str(e)}\n\nTraceback:\n{tb_str}")
+        log.error(f"Failed to store documents in Pinecone: {str(e)}")
+        # Provide a clean error message for user-facing diagnostics
+        raise ValueError(f"Failed to store documents in Pinecone. This is likely a Vercel-specific issue. Detail: {str(e)}")
 
 def similarity_search(
     query: str, document_id: str | None = None, k: int = 5

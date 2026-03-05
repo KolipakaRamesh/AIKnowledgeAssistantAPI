@@ -1,5 +1,45 @@
 import os
 import tempfile
+import multiprocessing.pool
+from concurrent.futures import ThreadPoolExecutor
+
+# ── Multiprocessing Monkeypatch for Vercel ──────────────────────────────────
+# Vercel's serverless environment does not support semaphores (required by 
+# multiprocessing.synchronize.SemLock). Some libraries like pinecone-client 
+# use multiprocessing.pool.ThreadPool, which triggers this. We replace it 
+# with a ThreadPoolExecutor-based implementation that avoids semaphores.
+
+class VercelThreadPool:
+    def __init__(self, processes=None, initializer=None, initargs=()):
+        self._executor = ThreadPoolExecutor(max_workers=processes)
+
+    def apply_async(self, func, args=(), kwds={}, callback=None, error_callback=None):
+        future = self._executor.submit(func, *args, **kwds)
+        if callback:
+            future.add_done_callback(lambda f: callback(f.result()) if not f.exception() else None)
+        if error_callback:
+            future.add_done_callback(lambda f: error_callback(f.exception()) if f.exception() else None)
+        return future
+
+    def map_async(self, func, iterable, chunksize=None, callback=None, error_callback=None):
+        # Simple implementation for map_async
+        futures = [self._executor.submit(func, item) for item in iterable]
+        return futures
+
+    def close(self):
+        self._executor.shutdown(wait=False)
+
+    def join(self):
+        self._executor.shutdown(wait=True)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+# Apply the monkeypatch
+multiprocessing.pool.ThreadPool = VercelThreadPool
 
 # ── Aggressive Environment Setup (Vercel Fix) ───────────────────────────────
 # We set multiple environment variables to point to /tmp to ensure all libraries
