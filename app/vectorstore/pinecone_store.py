@@ -14,7 +14,8 @@ _embeddings: OpenAIEmbeddings | None = None
 def _get_embeddings() -> OpenAIEmbeddings:
     global _embeddings
     if _embeddings is None:
-        logger.info(f"Creating OpenAIEmbeddings instance (model: {settings.embedding_model})")
+        cache_dir = os.environ.get("TIKTOKEN_CACHE_DIR", "NOT SET")
+        logger.info(f"Creating OpenAIEmbeddings instance (model: {settings.embedding_model}). Tiktoken cache: {cache_dir}")
         try:
             _embeddings = OpenAIEmbeddings(
                 model=settings.embedding_model,
@@ -53,6 +54,9 @@ def add_documents(documents: list[Document]) -> int:
         return len(documents)
     except Exception as e:
         log.error(f"Failed to store documents in Pinecone: {str(e)}")
+        # Log full traceback for deep debugging
+        import traceback
+        log.error(traceback.format_exc())
         # Re-raise to let the service layer handle it or return error to user
         raise e
 

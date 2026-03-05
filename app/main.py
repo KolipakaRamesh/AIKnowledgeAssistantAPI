@@ -5,7 +5,18 @@ import tempfile
 # We MUST set this before importing any LangChain/OpenAI libraries to avoid
 # [Errno 2] No such file or directory errors in serverless environments.
 if os.getenv("VERCEL") == "1" or os.getenv("NOW_REGION"):
-    os.environ["TIKTOKEN_CACHE_DIR"] = tempfile.gettempdir()
+    cache_dir = os.path.join(tempfile.gettempdir(), "tiktoken_cache")
+    try:
+        os.makedirs(cache_dir, exist_ok=True)
+        os.environ["TIKTOKEN_CACHE_DIR"] = cache_dir
+        # Verification write
+        test_file = os.path.join(cache_dir, ".write_test")
+        with open(test_file, "w") as f:
+            f.write("ok")
+        os.remove(test_file)
+        print(f"--- INFO: Tiktoken cache set to {cache_dir} and verified writable ---")
+    except Exception as e:
+        print(f"--- ERROR: Failed to setup tiktoken cache at {cache_dir}: {e} ---")
 
 from contextlib import asynccontextmanager
 
