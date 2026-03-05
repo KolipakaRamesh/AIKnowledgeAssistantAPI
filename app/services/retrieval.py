@@ -1,14 +1,14 @@
+from app.config import get_settings
+settings = get_settings()
+
 import os
 import json
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.schema import Document
 
-from app.config import get_settings
 from app.vectorstore.pinecone_store import similarity_search
 from loguru import logger
-
-settings = get_settings()
 
 # ── Prompt templates ──────────────────────────────────────────────────────────
 

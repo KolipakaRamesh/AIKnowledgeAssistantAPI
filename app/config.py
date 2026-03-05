@@ -79,12 +79,16 @@ def get_settings() -> Settings:
     settings = Settings()
     
     # Configure LangSmith tracing via environment variables expected by LangChain
-    # This must happen as early as possible.
+    # This must happen as early as possible, before LangChain modules are imported.
     if settings.langsmith_tracing.lower() == "true":
         os.environ["LANGCHAIN_TRACING_V2"] = "true"
         os.environ["LANGCHAIN_ENDPOINT"] = settings.langsmith_endpoint
         os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
         os.environ["LANGCHAIN_PROJECT"] = settings.langsmith_project
+        # Use simple print as logger might not be fully ready
         print(f"--- INFO: LangSmith tracing enabled (Project: {settings.langsmith_project}) ---")
         
     return settings
+
+# Initialize settings and tracing immediately on module load
+get_settings()

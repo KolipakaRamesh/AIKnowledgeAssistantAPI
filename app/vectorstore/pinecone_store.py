@@ -1,12 +1,12 @@
+from app.config import get_settings
+settings = get_settings()
+
 from langchain_pinecone import PineconeVectorStore
 from langchain_openai import OpenAIEmbeddings
 from langchain.schema import Document
 import os
 
-from app.config import get_settings
 from loguru import logger
-
-settings = get_settings()
 
 # Shared embedding model (singleton)
 _embeddings: OpenAIEmbeddings | None = None
