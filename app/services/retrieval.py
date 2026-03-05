@@ -10,12 +10,6 @@ from loguru import logger
 
 settings = get_settings()
 
-# Configure LangSmith tracing via environment variables expected by LangChain
-os.environ["LANGCHAIN_TRACING_V2"] = settings.langsmith_tracing
-os.environ["LANGCHAIN_ENDPOINT"] = settings.langsmith_endpoint
-os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
-os.environ["LANGCHAIN_PROJECT"] = settings.langsmith_project
-
 # ── Prompt templates ──────────────────────────────────────────────────────────
 
 QA_PROMPT = PromptTemplate(

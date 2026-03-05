@@ -75,5 +75,16 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def get_settings() -> Settings:
-    """Return a cached singleton Settings instance."""
-    return Settings()
+    """Return a cached singleton Settings instance and initialize tracing."""
+    settings = Settings()
+    
+    # Configure LangSmith tracing via environment variables expected by LangChain
+    # This must happen as early as possible.
+    if settings.langsmith_tracing.lower() == "true":
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+        os.environ["LANGCHAIN_ENDPOINT"] = settings.langsmith_endpoint
+        os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
+        os.environ["LANGCHAIN_PROJECT"] = settings.langsmith_project
+        print(f"--- INFO: LangSmith tracing enabled (Project: {settings.langsmith_project}) ---")
+        
+    return settings
