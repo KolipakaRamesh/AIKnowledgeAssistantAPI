@@ -1,6 +1,6 @@
 # 🧠 AI Knowledge Assistant API
 
-A production-ready **Retrieval Augmented Generation (RAG)** API designed for high-performance document intelligence. Build, query, and extract insights from your documents with full source attribution. 
+A production-ready **Retrieval Augmented Generation (RAG)** API designed for high-performance document intelligence. Build, query, and extract insights from your documents with full source attribution.
 
 > [!NOTE]
 > Designed with production stability in mind, addressing common pitfalls highlighted in *"Most RAG Systems Fail in Production"* (e.g., robust chunking, metadata filtering, and cross-platform reliability).
@@ -16,19 +16,25 @@ graph TD
     subgraph "Core Backend"
         FastAPI --> Middleware["Auth & Rate Limiting"]
         Middleware --> Router["API Routers"]
+        Middleware --> Logger["Loguru (Structured JSON)"]
     end
     
     subgraph "Ingestion Pipeline"
         Router --> Parser["PyMuPDF Parser"]
         Parser --> Chunker["Recursive Chunker"]
-        Chunker --> Embedder["OpenAI Cloud Embeddings"]
-        Embedder --> Pinecone["Pinecone Cloud Vector DB"]
+        Chunker --> Embedder["OpenAI Embeddings"]
+        Embedder --> Pinecone["Pinecone Vector DB"]
     end
     
     subgraph "Retrieval & RAG"
         Router --> Retriever["Vector Store Retriever"]
         Retriever --> LLM["LLM (OpenRouter / GPT-4o-mini)"]
         LLM --> Formatter["Response Formatter"]
+    end
+    
+    subgraph "Observability"
+        LLM -.-> LangSmith["LangSmith Tracing"]
+        Retriever -.-> LangSmith
     end
     
     Pinecone -.-> Retriever
@@ -45,8 +51,9 @@ graph TD
     - **Key Interest Points**: Extraction of major insights, important terms, and action items.
 - **Developer First**:
     - **Swagger UI**: Interactive documentation at `/docs`.
-    - **MCP Manifest**: Native support for Model Context Protocol.
-    - **Production Ready**: Built-in rate limiting, security middleware, and structured logging.
+    - **MCP Native**: Full support for Model Context Protocol via `mcp/mcp_manifest.json`.
+    - **Production Ready**: Built-in rate limiting, security middleware, and structured JSON logging.
+- **Enterprise Observability**: Native integration with LangSmith for deep tracing and evaluation.
 
 ---
 
@@ -55,6 +62,7 @@ graph TD
 ### 1. Requirements
 - Python 3.9+
 - [OpenRouter API Key](https://openrouter.ai/keys) (for LLM)
+- [Pinecone API Key](https://www.pinecone.io/) (for Vector Storage)
 
 ### 2. Setup
 ```bash
@@ -71,7 +79,7 @@ pip install -r requirements.txt
 
 # Configure environment
 cp .env.example .env
-# Edit .env and set your OPENROUTER_API_KEY, OPENAI_API_KEY (optional), and API_KEY
+# Edit .env and set your required API keys
 ```
 
 ### 3. Run Locally
@@ -80,10 +88,14 @@ uvicorn app.main:app --reload --port 8000
 ```
 Visit **http://localhost:8000/docs** to explore the interactive API documentation.
 
-### 🛡️ Production Readiness & Stability
+---
+
+## 🛡️ Production & Stability
+
 - **Cross-Platform Compatibility**: Automatically handles environment-specific challenges (e.g., dynamically adjusting `TIKTOKEN_CACHE_DIR` for Vercel vs. Windows/Linux).
 - **Pinecone Integration**: Uses Pinecone's serverless/pod-based architecture for scalable vector storage and fast retrieval.
-- **Enterprise Settings**: Configurable `CHUNK_SIZE`, `CHUNK_OVERLAP`, and rate limits to prevent API abuse and optimize retrieval performance.
+- **Observability**: Built-in **LangSmith** tracing for debugging complex RAG chains.
+- **Fail-Safe Startup**: Production-grade error handling that provides diagnostic hints even if initialization fails on Vercel.
 
 ---
 
@@ -112,12 +124,13 @@ curl -X POST http://localhost:8000/ask-question \
 
 ---
 
-## �️ Tech Stack
+## 🛠️ Tech Stack
 
 - **API Framework**: [FastAPI](https://fastapi.tiangolo.com/)
 - **Orchestration**: [LangChain](https://www.langchain.com/)
 - **Vector Database**: [Pinecone](https://www.pinecone.io/)
 - **Embeddings**: [OpenAI Embeddings](https://platform.openai.com/docs/guides/embeddings) (`text-embedding-3-small`)
-- **LLM Provider**: [OpenRouter](https://openrouter.ai/)
+- **LLM Provider**: [OpenRouter](https://openrouter.ai/) (`gpt-4o-mini`)
+- **Logging**: [Loguru](https://github.com/Delgan/loguru) (Structured JSON)
+- **Tracing**: [LangSmith](https://smith.langchain.com/)
 - **Deployment**: [Vercel](https://vercel.com/)
-- **Observability**: [LangSmith](https://smith.langchain.com/)

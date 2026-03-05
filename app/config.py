@@ -4,9 +4,13 @@ from pydantic import Field
 from functools import lru_cache
 
 # Set tiktoken cache to a temporary directory for environments with limited filesystems
-if os.getenv("VERCEL") == "1":
+# This is a critical fix for [Errno 2] errors on Vercel.
+if os.getenv("VERCEL") == "1" or os.getenv("NOW_REGION"):
     import tempfile
-    os.environ["TIKTOKEN_CACHE_DIR"] = tempfile.gettempdir()
+    tmp_path = tempfile.gettempdir()
+    os.environ["TIKTOKEN_CACHE_DIR"] = tmp_path
+    # Note: We can't use our 'logger' here yet because settings are still being defined
+    print(f"--- INFO: Tiktoken cache path set to {tmp_path} (Vercel detected) ---")
 
 
 class Settings(BaseSettings):

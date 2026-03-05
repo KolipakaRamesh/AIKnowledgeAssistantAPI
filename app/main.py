@@ -1,4 +1,12 @@
 import os
+import tempfile
+
+# ── Tiktoken Cache (Vercel Fix) ──────────────────────────────────────────────
+# We MUST set this before importing any LangChain/OpenAI libraries to avoid
+# [Errno 2] No such file or directory errors in serverless environments.
+if os.getenv("VERCEL") == "1" or os.getenv("NOW_REGION"):
+    os.environ["TIKTOKEN_CACHE_DIR"] = tempfile.gettempdir()
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
