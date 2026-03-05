@@ -7,11 +7,15 @@ from functools import lru_cache
 # This is a critical fix for [Errno 2] errors on Vercel.
 if os.getenv("VERCEL") == "1" or os.getenv("NOW_REGION"):
     import tempfile
-    tmp_path = os.path.join(tempfile.gettempdir(), "tiktoken_cache")
+    tmp_path = tempfile.gettempdir()
+    os.environ["HOME"] = tmp_path
+    os.environ["XDG_CACHE_HOME"] = os.path.join(tmp_path, ".cache")
+    
+    tiktoken_path = os.path.join(tmp_path, "tiktoken_cache")
     try:
-        os.makedirs(tmp_path, exist_ok=True)
-        os.environ["TIKTOKEN_CACHE_DIR"] = tmp_path
-        print(f"--- INFO: Tiktoken cache path set to {tmp_path} (Vercel detected) ---")
+        os.makedirs(tiktoken_path, exist_ok=True)
+        os.environ["TIKTOKEN_CACHE_DIR"] = tiktoken_path
+        print(f"--- INFO: Tiktoken cache path set to {tiktoken_path} (Vercel detected) ---")
     except Exception as e:
         print(f"--- ERROR: Failed to create tiktoken cache dir: {e} ---")
 

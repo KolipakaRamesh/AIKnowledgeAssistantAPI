@@ -1,22 +1,28 @@
 import os
 import tempfile
 
-# ── Tiktoken Cache (Vercel Fix) ──────────────────────────────────────────────
-# We MUST set this before importing any LangChain/OpenAI libraries to avoid
-# [Errno 2] No such file or directory errors in serverless environments.
+# ── Aggressive Environment Setup (Vercel Fix) ───────────────────────────────
+# We set multiple environment variables to point to /tmp to ensure all libraries
+# (like tiktoken, langchain, etc.) have a writable home and cache.
 if os.getenv("VERCEL") == "1" or os.getenv("NOW_REGION"):
-    cache_dir = os.path.join(tempfile.gettempdir(), "tiktoken_cache")
+    tmp_base = tempfile.gettempdir()
+    os.environ["HOME"] = tmp_base
+    os.environ["XDG_CACHE_HOME"] = os.path.join(tmp_base, ".cache")
+    
+    tiktoken_cache = os.path.join(tmp_base, "tiktoken_cache")
+    os.makedirs(tiktoken_cache, exist_ok=True)
+    os.environ["TIKTOKEN_CACHE_DIR"] = tiktoken_cache
+    
+    print(f"--- INFO: Vercel detected. HOME={os.environ['HOME']}, TIKTOKEN_CACHE_DIR={os.environ['TIKTOKEN_CACHE_DIR']} ---")
+    
+    # Early test for tiktoken initialization
     try:
-        os.makedirs(cache_dir, exist_ok=True)
-        os.environ["TIKTOKEN_CACHE_DIR"] = cache_dir
-        # Verification write
-        test_file = os.path.join(cache_dir, ".write_test")
-        with open(test_file, "w") as f:
-            f.write("ok")
-        os.remove(test_file)
-        print(f"--- INFO: Tiktoken cache set to {cache_dir} and verified writable ---")
+        import tiktoken
+        # Try to get an encoder to trigger cache access/creation
+        tiktoken.get_encoding("cl100k_base")
+        print("--- INFO: Tiktoken initialization test: SUCCESS ---")
     except Exception as e:
-        print(f"--- ERROR: Failed to setup tiktoken cache at {cache_dir}: {e} ---")
+        print(f"--- WARNING: Tiktoken initialization test: FAILED: {e} ---")
 
 from contextlib import asynccontextmanager
 

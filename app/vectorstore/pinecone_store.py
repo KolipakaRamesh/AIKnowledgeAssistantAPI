@@ -53,12 +53,11 @@ def add_documents(documents: list[Document]) -> int:
         log.info("Successfully completed Pinecone upsert")
         return len(documents)
     except Exception as e:
-        log.error(f"Failed to store documents in Pinecone: {str(e)}")
-        # Log full traceback for deep debugging
         import traceback
-        log.error(traceback.format_exc())
-        # Re-raise to let the service layer handle it or return error to user
-        raise e
+        tb_str = traceback.format_exc()
+        log.error(f"Failed to store documents in Pinecone: {str(e)}\n{tb_str}")
+        # Include traceback in the exception message for user-facing diagnostics
+        raise ValueError(f"Failed to store documents in Pinecone: {str(e)}\n\nTraceback:\n{tb_str}")
 
 def similarity_search(
     query: str, document_id: str | None = None, k: int = 5
