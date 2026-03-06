@@ -7,7 +7,7 @@
     },
     "servers": [
         {
-            "url": "https://YOUR-VERCEL-URL.vercel.app",
+            "url": "https://ai-knowledge-assistant-api.vercel.app",
             "description": "Production Server"
         }
     ],
