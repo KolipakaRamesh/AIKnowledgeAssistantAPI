@@ -1,0 +1,293 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "AI Knowledge Assistant API",
+        "description": "Upload documents and ask questions, get summaries and key insights using Retrieval Augmented Generation (RAG). Responses are grounded in uploaded content with source attribution.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "https://YOUR-VERCEL-URL.vercel.app",
+            "description": "Production Server"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "X-API-Key": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-API-Key"
+            }
+        }
+    },
+    "security": [
+        {
+            "X-API-Key": []
+        }
+    ],
+    "paths": {
+        "/upload-doc": {
+            "post": {
+                "summary": "Upload and index a document",
+                "description": "Upload a PDF, TXT, or MD file for indexing into the vector database. Returns a `document_id` for use in other endpoints.",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The document file to upload (Max 20MB)."
+                                    }
+                                },
+                                "required": [
+                                    "file"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Ingestion",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "document_id": {
+                                            "type": "string"
+                                        },
+                                        "filename": {
+                                            "type": "string"
+                                        },
+                                        "chunks_indexed": {
+                                            "type": "integer"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "415": {
+                        "description": "Unsupported Media Type"
+                    },
+                    "413": {
+                        "description": "File Too Large"
+                    }
+                }
+            }
+        },
+        "/ask-question": {
+            "post": {
+                "summary": "Ask a question",
+                "description": "Uses RAG to answer questions based on uploaded documents. Provides source attribution.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "question": {
+                                        "type": "string",
+                                        "minLength": 3,
+                                        "maxLength": 2000
+                                    },
+                                    "document_id": {
+                                        "type": "string",
+                                        "description": "Optional: Filter search by specific document ID."
+                                    }
+                                },
+                                "required": [
+                                    "question"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Answer generated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "answer": {
+                                            "type": "string"
+                                        },
+                                        "source": {
+                                            "type": "string",
+                                            "enum": [
+                                                "vectordb",
+                                                "llm"
+                                            ]
+                                        },
+                                        "confidence": {
+                                            "type": "number"
+                                        },
+                                        "sources": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "chunk_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "text": {
+                                                        "type": "string"
+                                                    },
+                                                    "score": {
+                                                        "type": "number"
+                                                    },
+                                                    "filename": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/summarize": {
+            "post": {
+                "summary": "Summarize a document",
+                "description": "Generates a structured summary, bullet points, and key concepts for a document.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "document_id": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "document_id"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Summary generated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "summary": {
+                                            "type": "string"
+                                        },
+                                        "bullet_points": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "important_concepts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/extract-keypoints": {
+            "post": {
+                "summary": "Extract key insights",
+                "description": "Identifies major insights, important terms, and action items.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "document_id": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "document_id"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Insights extracted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "major_insights": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "important_terms": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "action_items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "summary": "Health check",
+                "description": "Check if the API is online.",
+                "responses": {
+                    "200": {
+                        "description": "Healthy",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -111,6 +111,20 @@ Visit **http://localhost:8000/docs** to explore the interactive API documentatio
 
 ---
 
+## 🌐 RapidAPI Integration
+
+Listing this API on [RapidAPI](https://rapidapi.com) is straightforward using the provided OpenAPI specification:
+
+1. **Download the Spec**: Locate the [rapidapi_openapi.json](file:///d:/Development/AIKnowledgeAssistantAPI/rapidapi_openapi.json) file in this repository.
+2. **Import to RapidAPI**:
+   - Log in to the [RapidAPI Provider Dashboard](https://rapidapi.com/provider).
+   - Click **Add New API**.
+   - Choose **OpenAPI** as the definition type and upload `rapidapi_openapi.json`.
+3. **Configure Authentication**:
+   - Ensure the `X-API-Key` header is configured as the required authentication parameter for all protected endpoints.
+
+---
+
 ## 🛡️ Security & Authentication
 
 All protected endpoints require the **`X-API-Key`** header. This key is your internal secret defined in the `.env` file as `API_KEY`.
